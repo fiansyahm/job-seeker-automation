@@ -14,6 +14,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
+import requests
 
 app = Flask(__name__)
 
@@ -82,7 +83,7 @@ def getAttributeDiv(driver, xfullpath, search_by, attribute):
 
     # Ganti element_to_be_clickable dengan presence_of_element_located
     elem = wait.until(EC.presence_of_element_located((by_for, xfullpath)))
-    attribute_value = elem.get_attribute("innerHTML")
+    attribute_value = elem.get_attribute(attribute)
     return attribute_value
 
 def getHrefAttribute(html_content):
@@ -95,6 +96,57 @@ def getHrefAttribute(html_content):
         return href
     else:
         print("Tidak ada href ditemukan di HTML")
+
+def getCoverLatter(html_content):
+    prompt='Buatkan cover letter dengan keterangan\n\n'
+    prompt+='Nama:Muhammad Arifiansyah\n\n'
+    prompt+='Lulusan Teknik Informatika ITS\n\n'
+    prompt+='Dengan informasi lamaran seperti pada HTML dibawah:\n\n\''
+    prompt+=html_content
+    return call_gemini_api(prompt)
+
+
+def call_gemini_api(prompt):
+    # API Key
+    api_key = 'AIzaSyCfQvu0vb5BC1Y3A0Yxd8Pd1qwtKsvY8JE'
+    # Alternatif API Key (dikomentari)
+    # api_key = 'AIzaSyArumy4ma-XCr9yXFnsoqOKkHdXCbhV2iQ'
+    
+    # URL API Gemini
+    gemini_api_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}'
+    
+    # Payload untuk request (sesuai format API Gemini)
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ]
+    }
+    
+    # Header untuk request
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    
+    try:
+        # Kirim request POST ke API
+        response = requests.post(gemini_api_url, json=payload, headers=headers)
+        
+        # Pastikan request berhasil
+        response.raise_for_status()
+        
+        # Ambil hasil dari response
+        result = response.json()
+        # Ekstrak teks dari response (sesuai struktur API Gemini)
+        generated_text = result['candidates'][0]['content']['parts'][0]['text']
+        return generated_text
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error saat memanggil API: {e}")
+        return None
 
 def openJobstreet():
     # Inisialisasi driver
@@ -121,21 +173,29 @@ def openJobstreet():
     current_url = driver.current_url
     print("Recently URL:", current_url)
 
-    time.sleep(20)
-
     for i in range(10):
+        # click apply
         xfullpath='/html/body/div[1]/div/div[6]/div/div[2]/div[3]/section/div/div[3]/div[1]/div/div[2]/div[1]/div[2]/div/div/div[1]/div/a'
         click_selenium(driver,xfullpath,'xpath')
-        time.sleep(5)
-        
-        xfullpath='/html/body/div[58]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[1]/div[4]/div/div/div/div/div[1]'
-        href=getAttributeDiv(driver,xfullpath,'xpath','href')
-        link=getHrefAttribute(href)
-        driver.get(link)
 
-        # buka current link
-        driver.get(current_url)
-        time.sleep(20000)
+        # get data job opening
+        xfullpath='/html/body/div[58]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]'
+        html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+        cover_latter=getCoverLatter(html_content)
+        
+        # print(cover_latter)
+
+        # time.sleep(2000)
+        
+        # xfullpath='/html/body/div[58]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[1]/div[4]/div/div/div/div/div[1]'
+        xfullpath='/html/body/div[58]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]/div/div/div[1]/div[4]/div/div/div/div/div[1]/div'
+        html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+        link='https://id.jobstreet.com'+getHrefAttribute(html_content)
+        driver.get(link)
+        time.sleep(20)
+
+    # buka current link
+    # driver.get(current_url)
         
     time.sleep(20000)
     
