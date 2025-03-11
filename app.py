@@ -87,12 +87,12 @@ def getAttributeDiv(driver, xfullpath, search_by, attribute):
     return attribute_value
 
 def getHrefAttribute(html_content):
-    print("HTML CONTENT :",html_content)
+    # print("HTML CONTENT :",html_content)
     soup = BeautifulSoup(html_content, 'html.parser')
     link = soup.find('a')
     if link and 'href' in link.attrs:
         href = link['href']
-        print("Nilai href:", href)
+        # print("Nilai href:", href)
         return href
     else:
         print("Tidak ada href ditemukan di HTML")
@@ -101,8 +101,12 @@ def getCoverLatter(html_content):
     prompt='Buatkan cover letter dengan keterangan\n\n'
     prompt+='Nama:Muhammad Arifiansyah\n\n'
     prompt+='Lulusan Teknik Informatika ITS\n\n'
-    prompt+='Dengan informasi lamaran seperti pada HTML dibawah:\n\n\''
+    prompt+='Contoh Lamaran:\n\n'
+    prompt+= example_lamaran
+    prompt+='\n\nDengan informasi lamaran seperti pada HTML dibawah:\n\n\''
     prompt+=html_content
+    prompt+='\n\nMulai dari Yth. Bapak/Ibu HRD PT. NashTa Global Utama (tanpa alamat dan nama) dan ditutup dengan nomer telepon\n\n'
+    prompt+='Jangan ada sejenis: [Alamat PT. NashTa Global Utama, jika diperlukan] ,**Catatan:**  Surat lamaran ini telah disesuaikan dengan informasi yang Anda berikan dan deskripsi pekerjaan di HTML.  Pastikan untuk mengganti placeholder "[Nama Anda]", "[Nomor Telepon]"'
     return call_gemini_api(prompt)
 
 
@@ -170,8 +174,8 @@ def openJobstreet():
         # Tunggu sebentar agar halaman termuat
         print('sudah login')
     
-    current_url = driver.current_url
-    print("Recently URL:", current_url)
+    main_url = driver.current_url
+    print("Recently URL:", main_url)
 
     for i in range(10):
         # click apply
@@ -179,20 +183,52 @@ def openJobstreet():
         click_selenium(driver,xfullpath,'xpath')
 
         # get data job opening
-        xfullpath='/html/body/div[58]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]'
-        html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
-        cover_latter=getCoverLatter(html_content)
+        # xfullpath='/html/body/div[57]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]'
+        # html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+        # cover_latter=getCoverLatter(html_content)
+        cover_latter='Izin Melamar'
+        print(cover_latter)
         
-        # print(cover_latter)
-
-        # time.sleep(2000)
-        
-        # xfullpath='/html/body/div[58]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]/div[2]/div/div[1]/div[4]/div/div/div/div/div[1]'
-        xfullpath='/html/body/div[58]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]/div/div/div[1]/div[4]/div/div/div/div/div[1]/div'
+        # link full lamaran
+        xfullpath='/html/body/div[57]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]'
         html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
         link='https://id.jobstreet.com'+getHrefAttribute(html_content)
         driver.get(link)
-        time.sleep(20)
+
+        # klik lamaran
+        link = driver.current_url.split('?')[0].rstrip('/') + '/apply'
+        driver.get(link)
+
+        # fill lamaran
+        xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[3]/fieldset/div/div/div/div[2]/div/div[2]/div[2]/div/div[2]/div/div/textarea'
+        click_selenium(driver,xfullpath,'xpath','clear')
+        click_selenium(driver,xfullpath,'xpath',cover_latter)
+
+        # klik lanjut 1
+        xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[4]/div/button'
+        click_selenium(driver,xfullpath,'xpath')
+
+        print('wait')
+        time.sleep(10)
+
+        # klik lanjut 2 //Jawab Pertanyaan
+        xfullpath=f"//*[@data-testid='continue-button']"
+        click_selenium(driver,xfullpath,'xpath')
+
+        try:
+            # klik lanjut 3 //Perbarui Profil Jobstreet
+            xfullpath=f"//*[@data-testid='continue-button']"
+            click_selenium(driver,xfullpath,'xpath')
+        except:
+            print('skip button')
+
+        # final klik
+        xfullpath=f"//*[@data-testid='review-submit-application']"
+        click_selenium(driver,xfullpath,'xpath')
+
+        driver.get(main_url)
+
+        
 
     # buka current link
     # driver.get(current_url)
@@ -256,6 +292,24 @@ html_template = """
     {% endif %}
 </body>
 </html>
+"""
+
+example_lamaran="""
+Yth Bapak/Ibu
+HRD Perusahaan
+Dengan hormat,
+Perkenalkan nama saya Muhammad Arifiansyah Melalui email ini saya menyampaikan lamaran pekerjaan ke Perusahaan PT Cipta Teknologi Bersama di posisi Software Developer sesuai dengan lowongan pekerjaan yang ditayangkan pada platfrom jobstreet.
+
+Saya merupakan lulusan Institut Teknologi Sepuluh Nopember (ITS), Saya juga pernah tergabung dalam beberapa organisasi dikampus salah satunya pada event schematics sebagai Kepala Biro Pendanaan dan memiliki kemampuan untuk mengembangkan website informasi ataupun e-commerce serta aplikasi android yang fungsional dan menarik secara visual, saya memiliki minat besar berkarier di Perusahaan PT Cipta Teknologi Bersama karena deskripsi pekerjaan sesuai dengan pengalaman dan minat saya. Dari segi pengalaman, sering menggunakan Laravel untuk mengerjakan project sebagai backendnya. Saya juga terbiasa dalam menggunakan API contohnya API Midtrans, API Shopee, API Alamat, dll. Beberapa proyek saya kerjakan sendiri, sehingga dapat disebut saya menjadi Software Developerdalam hal ini.
+
+Dari pengalaman dan beberapa kemampuan tersebut, saya berharap mendapat gaji Rp. 6.500.000. Saya memiliki kemampuan beberapa bahasa pemprograman seperti PHP, Python, Javascript, dan Java. Framework Backend yang saya kuasai adalah Laravel, Django, React, dan Spring. Sedangkan untuk Framework Frontend yang saya kuasai adalah Boostrap, Tailwind, dll. Untuk RDBMS yang saya gunakan adalah MySQL, MongoDB, dan Firebase. Pengalaman saya menjadi Front Dev dan Back Dev adalah 3 tahun. Saya terbiasa menggunakan GIT untuk menyimpan kodingan dan beberapa dokumentasinya. Menggunakan GIT kurang lebih 3 tahun. Saya berpengalaman dalam scrum agile team salah satunya saat mengerjakan tugas skripsi saya, saya menggunakan platfrom clickup waktu itu. Saya siap bekerja secepatnya untuk saat ini, saya hanya berharap nanti dapat bekerjasama dan berkontribusi dengan baik di perusahaan ini. 
+
+Bersama email ini saya lampirkan CV sebagai dokumen pendukung. Demikian disampaikan, atas perhatian Bapak/Ibu disampaikan terimakasih.
+
+Hormat saya,
+Muhammad Arifiansyah
+085730794876
+
 """
 
 # Buat file template jika belum ada
