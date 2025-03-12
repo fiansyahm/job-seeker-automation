@@ -271,9 +271,13 @@ def openJobstreet():
             html_content = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
             getAutoComplete(driver,html_content)
 
-            # klik lanjut 2 //Jawab Pertanyaan
-            xfullpath=f"//*[@data-testid='continue-button']"
-            click_selenium(driver,xfullpath,'xpath')
+            try:
+                # klik lanjut 2 //Jawab Pertanyaan
+                xfullpath=f"//*[@data-testid='continue-button']"
+                click_selenium(driver,xfullpath,'xpath')
+            except:
+                print('skip button')
+
 
             try:
                 # klik lanjut 3 //Perbarui Profil Jobstreet [OPTIONAL]
