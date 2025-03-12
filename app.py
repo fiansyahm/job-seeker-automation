@@ -15,6 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
 import requests
+import re
 
 app = Flask(__name__)
 
@@ -105,16 +106,17 @@ def getCoverLatter(html_content):
     prompt+= example_lamaran
     prompt+='\n\nDengan informasi lamaran seperti pada HTML dibawah:\n\n\''
     prompt+=html_content
-    prompt+='\n\nMulai dari Yth. Bapak/Ibu HRD PT. NashTa Global Utama (tanpa alamat dan nama) dan ditutup dengan nomer telepon\n\n'
-    prompt+='Jangan ada sejenis: [Alamat PT. NashTa Global Utama, jika diperlukan] ,**Catatan:**  Surat lamaran ini telah disesuaikan dengan informasi yang Anda berikan dan deskripsi pekerjaan di HTML.  Pastikan untuk mengganti placeholder "[Nama Anda]", "[Nomor Telepon]"'
+    prompt+='\n\nMulai dari Yth. Bapak/Ibu HRD (tanpa alamat dan nama) dan ditutup dengan nomer telepon\n\n'
+    prompt+='Jangan ada sejenis: [Alamat ....., jika diperlukan] ,**Catatan:**  Surat lamaran ini telah disesuaikan dengan informasi yang Anda berikan dan deskripsi pekerjaan di HTML.  Pastikan untuk mengganti placeholder "[Nama Anda]", "[Nomor Telepon]"'
+    prompt+='Ganti NashTa Global Utama dan lowongan di apply denga nama perusahaan, jobnya dan posisinya Dengan informasi lamaran seperti pada HTML'
     return call_gemini_api(prompt)
 
 
 def call_gemini_api(prompt):
     # API Key
-    api_key = 'AIzaSyCfQvu0vb5BC1Y3A0Yxd8Pd1qwtKsvY8JE'
+    # api_key = 'AIzaSyCfQvu0vb5BC1Y3A0Yxd8Pd1qwtKsvY8JE'
     # Alternatif API Key (dikomentari)
-    # api_key = 'AIzaSyArumy4ma-XCr9yXFnsoqOKkHdXCbhV2iQ'
+    api_key = 'AIzaSyArumy4ma-XCr9yXFnsoqOKkHdXCbhV2iQ'
     
     # URL API Gemini
     gemini_api_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}'
@@ -152,6 +154,25 @@ def call_gemini_api(prompt):
         print(f"Error saat memanggil API: {e}")
         return None
 
+def getAutoComplete(html_content):
+    print('Auto Complete Start')
+    prompt=''
+    prompt+='\n\nDengan informasi html ini:\n\n\''
+    prompt+=html_content
+    prompt+='\n\nBuatkan urutan xpath yang di klik berdasar lamaran disini\n\n'
+    prompt+= example_lamaran
+    prompt+=f'''Keluarannya tolong seperti ini: ["//*[@data-testid='continue-button']", "//*[@data-testid='continue-button']", "//*[@data-testid='continue-button']"]'''
+    prompt+=f'''\n\nPilihannya dipilihkan Gemini saja'''
+    prompt+='formulir pra-lamaran ini xpathnya dipilih kira2 saja,misal pertanyaan tentang bahasa,dipilih bahasa inggris saja,dll'
+    list_xpath_string=call_gemini_api(prompt)
+    print('list_xpath_string:',list_xpath_string)
+    xpaths = re.findall(r'^\s*(//[^\s]+)', list_xpath_string, re.MULTILINE)
+    # Cetak hasil
+    for xpath in xpaths:
+        print(xpath)
+
+    time.sleep(100000)
+
 def openJobstreet():
     # Inisialisasi driver
     driver = init_driver()
@@ -177,56 +198,83 @@ def openJobstreet():
     main_url = driver.current_url
     print("Recently URL:", main_url)
 
+    total_apply=''
     for i in range(10):
-        # click apply
-        xfullpath='/html/body/div[1]/div/div[6]/div/div[2]/div[3]/section/div/div[3]/div[1]/div/div[2]/div[1]/div[2]/div/div/div[1]/div/a'
-        click_selenium(driver,xfullpath,'xpath')
-
-        # get data job opening
-        # xfullpath='/html/body/div[57]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]'
-        # html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
-        # cover_latter=getCoverLatter(html_content)
-        cover_latter='Izin Melamar'
-        print(cover_latter)
-        
-        # link full lamaran
-        xfullpath='/html/body/div[57]/div/div[2]/div[2]/div/div/div[1]/div/div[2]/div[2]'
-        html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
-        link='https://id.jobstreet.com'+getHrefAttribute(html_content)
-        driver.get(link)
-
-        # klik lamaran
-        link = driver.current_url.split('?')[0].rstrip('/') + '/apply'
-        driver.get(link)
-
-        # fill lamaran
-        xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[3]/fieldset/div/div/div/div[2]/div/div[2]/div[2]/div/div[2]/div/div/textarea'
-        click_selenium(driver,xfullpath,'xpath','clear')
-        click_selenium(driver,xfullpath,'xpath',cover_latter)
-
-        # klik lanjut 1
-        xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[4]/div/button'
-        click_selenium(driver,xfullpath,'xpath')
-
-        print('wait')
-        time.sleep(10)
-
-        # klik lanjut 2 //Jawab Pertanyaan
-        xfullpath=f"//*[@data-testid='continue-button']"
-        click_selenium(driver,xfullpath,'xpath')
-
         try:
-            # klik lanjut 3 //Perbarui Profil Jobstreet
+            driver.get(main_url)
+            # click apply
+            xfullpath='/html/body/div[1]/div/div[6]/div/div[2]/div[3]/section/div/div[3]/div[1]/div/div[2]/div[1]/div[2]/div/div/div[1]/div/a'
+            click_selenium(driver,xfullpath,'xpath')
+            
+            # link full lamaran
+            xfullpath='//*[@id="newTabButton"]/ancestor::*[11]'
+            html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+            link='https://id.jobstreet.com'+getHrefAttribute(html_content)
+            driver.get(link)
+
+            xfullpath='/html/body/div[1]/div/div[5]/div/div/div[2]/div[2]/div/div/div[1]'
+            position = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
+            print('Posisi:'+position)
+            
+            xfullpath='/html/body/div[1]/div/div[5]/div/div/div[2]/div[2]/div/div/div[2]/section[1]/div/div'
+            job_desc = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
+            print('Jobdesc:'+job_desc)
+
+            full_apply="Dengan keterangan posisi:"+position+'\n\nDengan Jobdesc:'+job_desc
+            cover_latter=getCoverLatter(full_apply)
+            # cover_latter='Izin Melamar '
+            print(cover_latter)
+
+            # klik lamaran
+            link = driver.current_url.split('?')[0].rstrip('/') + '/apply'
+            driver.get(link)
+
+            # get info job
+            xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[1]/div/div/div/div[2]/h1'
+            company=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+            xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[1]/div/div/div/div[2]/span[2]'
+            position=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+            apply_desc=company+' - '+position+'\n\n'
+            print('apply_desc: '+apply_desc)
+            
+            # fill lamaran
+            xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[3]/fieldset/div/div/div/div[2]/div/div[2]/div[2]/div/div[2]/div/div/textarea'
+            click_selenium(driver,xfullpath,'xpath','clear')
+            click_selenium(driver,xfullpath,'xpath',cover_latter)
+
+            # klik lanjut 1
+            xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[4]/div/button'
+            click_selenium(driver,xfullpath,'xpath')
+
+            time.sleep(10)
+            xfullpath='/html/body/div'
+            html_content = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
+            # getAutoComplete(html_content)
+
+            # klik lanjut 2 //Jawab Pertanyaan
             xfullpath=f"//*[@data-testid='continue-button']"
             click_selenium(driver,xfullpath,'xpath')
+
+            try:
+                # klik lanjut 3 //Perbarui Profil Jobstreet [OPTIONAL]
+                xfullpath=f"//*[@data-testid='continue-button']"
+                click_selenium(driver,xfullpath,'xpath')
+            except:
+                print('skip button')
+
+            # final klik
+            xfullpath=f"//*[@data-testid='review-submit-application']"
+            click_selenium(driver,xfullpath,'xpath')
+            time.sleep(5)
+
+            total_apply+=str(i+1)+'.'+apply_desc+'\n'
         except:
-            print('skip button')
+            print('proses '+str(i)+' Gagal')
 
-        # final klik
-        xfullpath=f"//*[@data-testid='review-submit-application']"
-        click_selenium(driver,xfullpath,'xpath')
-
-        driver.get(main_url)
+    print(total_apply)
+    with open("output.txt", "w", encoding="utf-8") as file:
+        file.write(total_apply)
+    print("File berhasil dibuat: output.txt")
 
         
 
