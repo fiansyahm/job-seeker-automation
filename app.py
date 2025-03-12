@@ -154,7 +154,7 @@ def call_gemini_api(prompt):
         print(f"Error saat memanggil API: {e}")
         return None
 
-def getAutoComplete(html_content):
+def getAutoComplete(driver,html_content):
     print('Auto Complete Start')
     prompt=''
     prompt+='\n\nDengan informasi html ini:\n\n\''
@@ -166,12 +166,21 @@ def getAutoComplete(html_content):
     prompt+='formulir pra-lamaran ini xpathnya dipilih kira2 saja,misal pertanyaan tentang bahasa,dipilih bahasa inggris saja,dll'
     list_xpath_string=call_gemini_api(prompt)
     print('list_xpath_string:',list_xpath_string)
-    xpaths = re.findall(r'^\s*(//[^\s]+)', list_xpath_string, re.MULTILINE)
-    # Cetak hasil
-    for xpath in xpaths:
-        print(xpath)
-
-    time.sleep(100000)
+    arr_xpath=list_xpath_string.split('```')[1].split('```')[0]
+    print('arr_xpath:',arr_xpath)
+    elements = arr_xpath.split(',')
+    print('------------------------')
+    for i in range(len(elements)):
+        if('"//*' in elements[i]):
+            start = elements[i].find('"//*[')           +1
+            end = elements[i].find(']"', start) + 1     -1
+            xfullpath=elements[i][start:end + 1]
+            try:
+                print('xpath:',xfullpath)
+                click_selenium(driver,xfullpath,'xpath')
+            except:
+                pass
+    # //*[@id="question-ID_Q_2630_V_1"]
 
 def openJobstreet():
     # Inisialisasi driver
@@ -195,19 +204,30 @@ def openJobstreet():
         # Tunggu sebentar agar halaman termuat
         print('sudah login')
     
+    
+
     main_url = driver.current_url
     print("Recently URL:", main_url)
 
     total_apply=''
     for i in range(10):
         try:
-            driver.get(main_url)
-            # click apply
-            xfullpath='/html/body/div[1]/div/div[6]/div/div[2]/div[3]/section/div/div[3]/div[1]/div/div[2]/div[1]/div[2]/div/div/div[1]/div/a'
-            click_selenium(driver,xfullpath,'xpath')
-            
-            # link full lamaran
-            xfullpath='//*[@id="newTabButton"]/ancestor::*[11]'
+            way=2
+            if(way==1):
+                # click apply
+                driver.get('https://id.jobstreet.com/id/jobs-in-information-communication-technology?subclassification=6302%2C6290%2C6287')
+                xfullpath=f"""//div[contains(@data-search-sol-meta, '"sectionRank":1')]"""
+                click_selenium(driver,xfullpath,'xpath')
+                # link full lamaran
+                xfullpath='/html/body/div[1]/div/div[6]/div/section/div[2]/div/div/div[1]/div/div/div/div/div[2]/div/div/div[3]/div/div/div[2]/div[2]'
+            elif(way==2):
+                # click apply
+                driver.get(main_url)
+                xfullpath='/html/body/div[1]/div/div[6]/div/div[2]/div[3]/section/div/div[3]/div[1]/div/div[2]/div[1]/div[2]/div/div/div[1]/div/a'
+                click_selenium(driver,xfullpath,'xpath')
+                # link full lamaran
+                xfullpath='//*[@id="newTabButton"]/ancestor::*[11]'
+
             html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
             link='https://id.jobstreet.com'+getHrefAttribute(html_content)
             driver.get(link)
@@ -247,9 +267,9 @@ def openJobstreet():
             click_selenium(driver,xfullpath,'xpath')
 
             time.sleep(10)
-            xfullpath='/html/body/div'
+            xfullpath='/html/body/div/div/div[1]/div[4]/div/div[3]'
             html_content = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
-            # getAutoComplete(html_content)
+            getAutoComplete(driver,html_content)
 
             # klik lanjut 2 //Jawab Pertanyaan
             xfullpath=f"//*[@data-testid='continue-button']"
@@ -264,7 +284,7 @@ def openJobstreet():
 
             # final klik
             xfullpath=f"//*[@data-testid='review-submit-application']"
-            click_selenium(driver,xfullpath,'xpath')
+            # click_selenium(driver,xfullpath,'xpath')
             time.sleep(5)
 
             total_apply+=str(i+1)+'.'+apply_desc+'\n'
