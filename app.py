@@ -182,6 +182,46 @@ def getAutoComplete(driver,html_content):
                 pass
     # //*[@id="question-ID_Q_2630_V_1"]
 
+def getAutoComplete1(driver,html_content):
+    print('Auto Complete Start')
+    prompt=''
+    prompt+='\n\nDengan informasi html ini:\n\n\''
+    prompt+=html_content
+    prompt+='\n\nBuatkan urutan xpath yang di klik berdasar informasi disini\n\n'
+
+   # Get JSON from URL
+    url = 'https://ideea.site/personal-profile/30'
+    response = requests.get(url)
+    data = response.text  # Mengambil isi respons sebagai string
+    prompt+= data
+    
+    prompt+=f'''Keluarannya tolong seperti ini dalam bentuk list xpath bukan lain (bukan kode python ,java,dll): ["//*[@data-testid='continue-button']", "//*[@data-testid='continue-button']", "//*[@data-testid='continue-button']"]'''
+    prompt+=f'''\n\nPilihannya dipilihkan Gemini saja'''
+    prompt+='formulir pra-lamaran ini xpathnya dipilih kira2 saja,misal pertanyaan tentang bahasa,dipilih bahasa inggris saja,dll'
+    list_xpath_string=call_gemini_api(prompt)
+    print('list_xpath_string:',list_xpath_string)
+
+    # Regex untuk menangkap XPath
+    pattern1 = r"`(/html[^`\n]*)`"
+    pattern2 = r'"(//[^"]+)"'
+
+    # Ekstrak semua XPath
+    xpaths = re.findall(pattern1, list_xpath_string)
+    if xpaths == []:
+        xpaths = re.findall(pattern2, list_xpath_string)
+    print('xpaths:',xpaths)
+    
+    print('------------------------')
+    for xpath in xpaths:
+        try:
+            print('xpath:',xpath)
+            click_selenium(driver,xpath,'xpath')
+        except:
+            pass
+    # //*[@id="question-ID_Q_2630_V_1"]
+
+
+
 def openJobstreet():
     # Inisialisasi driver
     driver = init_driver()
