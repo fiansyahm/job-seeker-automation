@@ -34,20 +34,22 @@ def init_driver():
     # Path ke chromedriver.exe
     chromedriver_path = r".\application\chrome\chromedriver.exe"
 
-    # Tentukan path ke profil Chrome-mu
-    chrome_profile_path = r"C:\Users\Arifiansyah\AppData\Local\Google\Chrome\User Data\Profile 22"
-
     # Set opsi Chrome untuk pakai profil yang sudah ada
     chrome_options = Options()
-    chrome_options.add_argument(f"user-data-dir=C:\\Users\\Arifiansyah\\AppData\\Local\\Google\\Chrome\\User Data")  # Folder utama User Data
-    chrome_options.add_argument(f"profile-directory=Profile 22")  # Nama profil spesifik
 
-    # Tambahan untuk menghindari masalah DevTools
-    chrome_options.add_argument("--remote-debugging-port=9222")
-
+    choseOptions = 1
+    if choseOptions == 1:
+        # Mode Profil
+        chrome_options.add_argument(f"user-data-dir=C:\\Users\\Arifiansyah\\AppData\\Local\\Google\\Chrome\\User Data")  # Folder utama User Data
+        chrome_options.add_argument(f"profile-directory=Profile 22")  # Nama profil spesifik
+        chrome_options.add_argument("--remote-debugging-port=9222")
+    else:
+        chrome_options.add_argument("--guest")  # Mode Guest
+    
     # Inisialisasi WebDriver dengan profil
     service = Service(executable_path=chromedriver_path)
     driver = webdriver.Chrome(service=service, options=chrome_options)
+    
 
     return driver
 
