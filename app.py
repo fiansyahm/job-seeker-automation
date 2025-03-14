@@ -3,6 +3,7 @@ from flask import Flask, request, render_template
 import os
 import subprocess
 import time
+from datetime import datetime
 
 # Fungsi untuk menginisialisasi Selenium WebDriver
 from selenium import webdriver
@@ -27,6 +28,55 @@ def kill_chrome_processes():
     except subprocess.CalledProcessError:
         print("Tidak ada proses Chrome yang berjalan atau gagal mematikan.")
 
+def loginGmail(driver):
+    # register
+    # identity
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[2]/div/div/div/button/span'
+    click_selenium(driver,xfullpath,'xpath')        
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div/div[1]/div[1]/div/div[1]/div/div[1]/input'
+    click_selenium(driver,xfullpath,'xpath','Rudi')
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div/div[1]/div[2]/div/div[1]/div/div[1]/input'
+    click_selenium(driver,xfullpath,'xpath','Wijaya')
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div/div/div/button/span'
+    click_selenium(driver,xfullpath,'xpath')
+
+    # birthday
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div[1]/div[1]/div/div/div[2]/select/option[8]'
+    click_selenium(driver,xfullpath,'xpath')
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div[1]/div[2]/div/div/div[1]/div/div[1]/input'
+    click_selenium(driver,xfullpath,'xpath','23')
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div[1]/div[3]/div/div/div[1]/div/div[1]/input'
+    click_selenium(driver,xfullpath,'xpath','2000')
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div[2]/div[1]/div/div[2]/select/option[3]'
+    click_selenium(driver,xfullpath,'xpath')
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div/div/div/button/span'
+    click_selenium(driver,xfullpath,'xpath')
+
+    # choose email
+    try:
+        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div/div[1]/div/div[1]/div/div[1]/input'
+        # example 3 september 2000 jam 09:38 to be 030920000938
+        stringtoday= datetime.now().strftime("%d%m%Y%H%M%S")
+        click_selenium(driver,xfullpath,'xpath','Rudi'+stringtoday)
+        # click xfullpath yang mengandung button
+        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[1]/div/div/button'
+        click_selenium(driver,xfullpath,'xpath')
+    except:
+        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div[1]/div[1]/div/span/div[3]/div/div[1]/div'
+        click_selenium(driver,xfullpath,'xpath')
+        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div[2]/div[1]/div/div[1]/div/div[1]/input'
+        click_selenium(driver,xfullpath,'xpath','Rudi'+stringtoday)
+        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[1]/div/div/button'
+        click_selenium(driver,xfullpath,'xpath')
+
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]/input'
+    click_selenium(driver,xfullpath,'xpath','Dr@gon32')
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section/div/div/div/div[1]/div/div/div[2]/div/div[1]/div/div[1]/input'
+    click_selenium(driver,xfullpath,'xpath','Dr@gon32')
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div/div/div/button'
+    click_selenium(driver,xfullpath,'xpath')
+
+
 def init_driver():
     # Matikan semua proses Chrome yang berjalan
     kill_chrome_processes()
@@ -37,7 +87,7 @@ def init_driver():
     # Set opsi Chrome untuk pakai profil yang sudah ada
     chrome_options = Options()
 
-    choseOptions = 1
+    choseOptions = 2
     if choseOptions == 1:
         # Mode Profil
         chrome_options.add_argument(f"user-data-dir=C:\\Users\\Arifiansyah\\AppData\\Local\\Google\\Chrome\\User Data")  # Folder utama User Data
@@ -45,6 +95,7 @@ def init_driver():
         chrome_options.add_argument("--remote-debugging-port=9222")
     else:
         chrome_options.add_argument("--guest")  # Mode Guest
+        # chrome_options.add_argument("user-data-dir=C:\\Temp\\SeleniumGuest")  # Profile kosong
     
     # Inisialisasi WebDriver dengan profil
     service = Service(executable_path=chromedriver_path)
@@ -240,9 +291,20 @@ def getAutoComplete1(driver,html_content):
             pass
     # //*[@id="question-ID_Q_2630_V_1"]
 
+def loginJobstreet(driver):
+    xfullpath='/html/body/div/div/div/div[2]/div/div/div/div[3]/div/div/form/span/div[2]/button[1]'
+    click_selenium(driver,xfullpath,'xpath')
 
+    xfullpath='/html/body/div[1]/div[1]/div[2]/div/div/div[2]/div/div/div[1]/form/span/section/div/div/div/div/ul/li[1]/div/div[1]/div/div[2]'
+    click_selenium(driver,xfullpath,'xpath')
+
+    xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div/div[2]/div/div/button/div[1]'
+    click_selenium(driver,xfullpath,'xpath')
+    print('Sukses Login')
 
 def openJobstreet():
+    # loginGmail(driver)
+    
     # Inisialisasi driver
     driver = init_driver()
     
@@ -250,17 +312,29 @@ def openJobstreet():
     # Buka URL
     driver.get(url)
     try:
-        xfullpath='/html/body/div/div/div/div[2]/div/div/div/div[3]/div/div/form/span/div[2]/button[1]'
-        click_selenium(driver,xfullpath,'xpath')
-
-        xfullpath='/html/body/div[1]/div[1]/div[2]/div/div/div[2]/div/div/div[1]/form/span/section/div/div/div/div/ul/li[1]/div/div[1]/div/div[2]'
-        click_selenium(driver,xfullpath,'xpath')
-
-        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div/div[2]/div/div/button/div[1]'
-        click_selenium(driver,xfullpath,'xpath')
-
-        print('login dulu')
+        loginJobstreet(driver)
     except:
+        url='https://accounts.google.com/AccountChooser/signinchooser?service=mail&continue=https://mail.google.com/mail/&flowName=GlifWebSignIn&flowEntry=AccountChooser&ec=asw-gmail-globalnav-signin'
+        driver.get(url)
+        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div[1]/form/span/section/div/div/div[1]/div/div[1]/div/div[1]/input'
+        click_selenium(driver,xfullpath,'xpath','fiansyahm31125@gmail.com')
+        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[1]/div/div/button'
+        click_selenium(driver,xfullpath,'xpath')
+        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section[2]/div/div/div[1]/div[1]/div/div/div/div/div[1]/div/div[1]/input'
+        click_selenium(driver,xfullpath,'xpath','Dr@gon060')
+        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[1]/div/div/button'
+        click_selenium(driver,xfullpath,'xpath')
+
+        time.sleep(5)
+
+        url='https://id.jobstreet.com/id/oauth/login?returnUrl=http%3A%2F%2Fid.jobstreet.com%2F';
+        # Buka URL
+        driver.get(url)
+        try:
+            loginJobstreet(driver)
+        except:
+            pass
+        
         # Tunggu sebentar agar halaman termuat
         print('sudah login')
     
