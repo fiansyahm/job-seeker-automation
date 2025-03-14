@@ -157,10 +157,17 @@ def call_gemini_api(prompt):
 def getAutoComplete(driver,html_content):
     print('Auto Complete Start')
     prompt=''
-    prompt+='\n\nDengan informasi html ini:\n\n\''
+    prompt+='\n\nDengan informasi from pra lamaran seperti pada html ini:\n\n\''
     prompt+=html_content
-    prompt+='\n\nBuatkan urutan xpath yang di klik berdasar lamaran disini\n\n'
+    prompt+='\n\nBuatkan urutan xpath yang di klik berdasar profil lamaran disini\n\n'
+    
     prompt+= example_lamaran
+    # Get JSON from URL
+    # url = 'https://ideea.site/personal-profile/30'
+    # response = requests.get(url)
+    # data = response.text  # Mengambil isi respons sebagai string
+    # prompt+= data
+
     prompt+=f'''Keluarannya tolong seperti ini: ["//*[@data-testid='continue-button']", "//*[@data-testid='continue-button']", "//*[@data-testid='continue-button']"]'''
     prompt+=f'''\n\nPilihannya dipilihkan Gemini saja'''
     prompt+='formulir pra-lamaran ini xpathnya dipilih kira2 saja,misal pertanyaan tentang bahasa,dipilih bahasa inggris saja,dll'
