@@ -175,19 +175,25 @@ def getAutoComplete(driver,html_content):
     print('list_xpath_string:',list_xpath_string)
     arr_xpath=list_xpath_string.split('```')[1].split('```')[0]
     print('arr_xpath:',arr_xpath)
-    elements = arr_xpath.split(',')
+    elements = arr_xpath.split('",')
     print('------------------------')
     for i in range(len(elements)):
-        if('"//*' in elements[i]):
+        if('"//*' in elements[i] and 'continue-button' not in elements[i]):
             start = elements[i].find('"//*[')           +1
-            end = elements[i].find(']"', start) + 1     -1
-            xfullpath=elements[i][start:end + 1]
+            xfullpath=elements[i][start:len(elements[i])]
             try:
+                xfullpath.strip()
                 print('xpath:',xfullpath)
-                click_selenium(driver,xfullpath,'xpath')
+                if 'option' not in xfullpath:
+                    checkbox = driver.find_element(By.XPATH, xfullpath)
+                    if not checkbox.is_selected():
+                        checkbox.click()
+                else:
+                    click_selenium(driver,xfullpath,'xpath')
+                # time.sleep(10)
             except:
                 pass
-    # //*[@id="question-ID_Q_2630_V_1"]
+    # time.sleep(10000)
 
 def getAutoComplete1(driver,html_content):
     print('Auto Complete Start')
@@ -222,7 +228,12 @@ def getAutoComplete1(driver,html_content):
     for xpath in xpaths:
         try:
             print('xpath:',xpath)
-            click_selenium(driver,xpath,'xpath')
+            if 'option' not in xpath:
+                checkbox = driver.find_element(By.XPATH, xpath)
+                if not checkbox.is_selected():
+                    checkbox.click()
+            else:
+                click_selenium(driver,xpath,'xpath')
         except:
             pass
     # //*[@id="question-ID_Q_2630_V_1"]
@@ -257,13 +268,13 @@ def openJobstreet():
     print("Recently URL:", main_url)
 
     total_apply=''
-    for i in range(10):
+    for index in range(10):
         try:
-            way=2
+            way=1
             if(way==1):
                 # click apply
                 driver.get('https://id.jobstreet.com/id/jobs-in-information-communication-technology?subclassification=6302%2C6290%2C6287')
-                xfullpath=f"""//div[contains(@data-search-sol-meta, '"sectionRank":1')]"""
+                xfullpath=f"""//div[contains(@data-search-sol-meta, '"sectionRank":{index+1}')]"""
                 click_selenium(driver,xfullpath,'xpath')
                 # link full lamaran
                 xfullpath='/html/body/div[1]/div/div[6]/div/section/div[2]/div/div/div[1]/div/div/div/div/div[2]/div/div/div[3]/div/div/div[2]/div[2]'
@@ -313,7 +324,7 @@ def openJobstreet():
             xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[4]/div/button'
             click_selenium(driver,xfullpath,'xpath')
 
-            time.sleep(10)
+            # time.sleep(10)
             xfullpath='/html/body/div/div/div[1]/div[4]/div/div[3]'
             html_content = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
             getAutoComplete(driver,html_content)
@@ -338,9 +349,9 @@ def openJobstreet():
             # click_selenium(driver,xfullpath,'xpath')
             time.sleep(5)
 
-            total_apply+=str(i+1)+'.'+apply_desc+'\n'
+            total_apply+=str(index+1)+'.'+apply_desc+'\n'
         except:
-            print('proses '+str(i)+' Gagal')
+            print('proses '+str(index+1)+' Gagal')
 
     print(total_apply)
     with open("output.txt", "w", encoding="utf-8") as file:
