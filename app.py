@@ -87,7 +87,7 @@ def init_driver():
     # Set opsi Chrome untuk pakai profil yang sudah ada
     chrome_options = Options()
 
-    choseOptions = 2
+    choseOptions = 1
     if choseOptions == 1:
         # Mode Profil
         chrome_options.add_argument(f"user-data-dir=C:\\Users\\Arifiansyah\\AppData\\Local\\Google\\Chrome\\User Data")  # Folder utama User Data
@@ -206,6 +206,22 @@ def call_gemini_api(prompt):
     except requests.exceptions.RequestException as e:
         print(f"Error saat memanggil API: {e}")
         return None
+def clickColoumnDetail(driver,xfullpath):
+    if 'option' not in xfullpath:
+        checkbox = driver.find_element(By.XPATH, xfullpath)
+        if not checkbox.is_selected():
+            checkbox.click()
+    else:
+        click_selenium(driver,xfullpath,'xpath')
+    # time.sleep(10)
+
+def clickColoumn(driver,xfullpath,totalxpath):
+    if totalxpath == 1:
+        clickColoumnDetail(driver,xfullpath)
+    else:
+        parts = xfullpath.split('//*')
+        for part in parts:
+            clickColoumnDetail(driver,part)
 
 def getAutoComplete(driver,html_content):
     print('Auto Complete Start')
@@ -213,8 +229,8 @@ def getAutoComplete(driver,html_content):
     prompt+='\n\nDengan informasi from pra lamaran seperti pada html ini:\n\n\''
     prompt+=html_content
     prompt+='\n\nBuatkan urutan xpath yang di klik berdasar profil lamaran disini\n\n'
-    
     prompt+= example_lamaran
+    prompt+='\n\nJika tidak ada pengalaman piih Less than 1 year\n\n\''
     # Get JSON from URL
     # url = 'https://ideea.site/personal-profile/30'
     # response = requests.get(url)
@@ -226,10 +242,24 @@ def getAutoComplete(driver,html_content):
     prompt+='formulir pra-lamaran ini xpathnya dipilih kira2 saja,misal pertanyaan tentang bahasa,dipilih bahasa inggris saja,dll'
     list_xpath_string=call_gemini_api(prompt)
     print('list_xpath_string:',list_xpath_string)
+
+    # change //select[  //input[
+    list_xpath_string=list_xpath_string.replace('//select[', '//*[')
+    list_xpath_string=list_xpath_string.replace('//input[', '//*[')
+    # list_xpath_string=list_xpath_string.replace('//textarea[', '//*[')
+    # list_xpath_string=list_xpath_string.replace('//option[', '//*[')
+    # list_xpath_string=list_xpath_string.replace('//label[', '//*[')
+    # list_xpath_string=list_xpath_string.replace('//button[', '//*[')
+    # list_xpath_string=list_xpath_string.replace('//a[', '//*[')
+    # list_xpath_string=list_xpath_string.replace('//li[', '//*[')
+    # list_xpath_string=list_xpath_string.replace('//div[', '//*[')
+    # list_xpath_string=list_xpath_string.replace('//span[', '//*[')
+  
+
     arr_xpath=list_xpath_string.split('```')[1].split('```')[0]
     print('arr_xpath:',arr_xpath)
     elements = arr_xpath.split('",')
-    print('------------------------')
+    print('-------GO TO XPATH---------')
     for i in range(len(elements)):
         if('"//*' in elements[i] and 'continue-button' not in elements[i]):
             start = elements[i].find('"//*[')           +1
@@ -237,13 +267,8 @@ def getAutoComplete(driver,html_content):
             try:
                 xfullpath.strip()
                 print('xpath:',xfullpath)
-                if 'option' not in xfullpath:
-                    checkbox = driver.find_element(By.XPATH, xfullpath)
-                    if not checkbox.is_selected():
-                        checkbox.click()
-                else:
-                    click_selenium(driver,xfullpath,'xpath')
-                # time.sleep(10)
+                totalxpath = xfullpath.count('//*')
+                clickColoumn(driver,xfullpath,totalxpath)
             except:
                 pass
     # time.sleep(10000)
@@ -314,136 +339,132 @@ def openJobstreet():
     try:
         loginJobstreet(driver)
     except:
-        url='https://accounts.google.com/AccountChooser/signinchooser?service=mail&continue=https://mail.google.com/mail/&flowName=GlifWebSignIn&flowEntry=AccountChooser&ec=asw-gmail-globalnav-signin'
-        driver.get(url)
-        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div[1]/form/span/section/div/div/div[1]/div/div[1]/div/div[1]/input'
-        click_selenium(driver,xfullpath,'xpath','fiansyahm31125@gmail.com')
-        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[1]/div/div/button'
-        click_selenium(driver,xfullpath,'xpath')
-        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section[2]/div/div/div[1]/div[1]/div/div/div/div/div[1]/div/div[1]/input'
-        click_selenium(driver,xfullpath,'xpath','Dr@gon060')
-        xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[1]/div/div/button'
-        click_selenium(driver,xfullpath,'xpath')
+        # print('check')
+        # time.sleep(100)
+        # url='https://accounts.google.com/AccountChooser/signinchooser?service=mail&continue=https://mail.google.com/mail/&flowName=GlifWebSignIn&flowEntry=AccountChooser&ec=asw-gmail-globalnav-signin'
+        # driver.get(url)
+        # xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div[1]/form/span/section/div/div/div[1]/div/div[1]/div/div[1]/input'
+        # click_selenium(driver,xfullpath,'xpath','fiansyahm31125@gmail.com')
+        # xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[1]/div/div/button'
+        # click_selenium(driver,xfullpath,'xpath')
+        # xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[2]/div/div/div/form/span/section[2]/div/div/div[1]/div[1]/div/div/div/div/div[1]/div/div[1]/input'
+        # click_selenium(driver,xfullpath,'xpath','Dr@gon060')
+        # xfullpath='/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[1]/div/div/button'
+        # click_selenium(driver,xfullpath,'xpath')
 
-        time.sleep(5)
+        # time.sleep(5)
 
-        url='https://id.jobstreet.com/id/oauth/login?returnUrl=http%3A%2F%2Fid.jobstreet.com%2F';
-        # Buka URL
-        driver.get(url)
-        try:
-            loginJobstreet(driver)
-        except:
-            pass
+        # url='https://id.jobstreet.com/id/oauth/login?returnUrl=http%3A%2F%2Fid.jobstreet.com%2F';
+        # # Buka URL
+        # driver.get(url)
+        # try:
+        #     loginJobstreet(driver)
+        # except:
+        #     pass
         
         # Tunggu sebentar agar halaman termuat
         print('sudah login')
     
-    
-
-    main_url = driver.current_url
-    print("Recently URL:", main_url)
-
-    total_apply=''
-    for index in range(10):
-        try:
-            way=1
-            if(way==1):
-                # click apply
-                driver.get('https://id.jobstreet.com/id/jobs-in-information-communication-technology?subclassification=6302%2C6290%2C6287')
-                xfullpath=f"""//div[contains(@data-search-sol-meta, '"sectionRank":{index+1}')]"""
-                click_selenium(driver,xfullpath,'xpath')
-                # link full lamaran
-                xfullpath='/html/body/div[1]/div/div[6]/div/section/div[2]/div/div/div[1]/div/div/div/div/div[2]/div/div/div[3]/div/div/div[2]/div[2]'
-            elif(way==2):
-                # click apply
-                driver.get(main_url)
-                xfullpath='/html/body/div[1]/div/div[6]/div/div[2]/div[3]/section/div/div[3]/div[1]/div/div[2]/div[1]/div[2]/div/div/div[1]/div/a'
-                click_selenium(driver,xfullpath,'xpath')
-                # link full lamaran
-                xfullpath='//*[@id="newTabButton"]/ancestor::*[11]'
-
-            html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
-            link='https://id.jobstreet.com'+getHrefAttribute(html_content)
-            driver.get(link)
-
-            xfullpath='/html/body/div[1]/div/div[5]/div/div/div[2]/div[2]/div/div/div[1]'
-            position = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
-            print('Posisi:'+position)
-            
-            xfullpath='/html/body/div[1]/div/div[5]/div/div/div[2]/div[2]/div/div/div[2]/section[1]/div/div'
-            job_desc = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
-            print('Jobdesc:'+job_desc)
-
-            full_apply="Dengan keterangan posisi:"+position+'\n\nDengan Jobdesc:'+job_desc
-            cover_latter=getCoverLatter(full_apply)
-            # cover_latter='Izin Melamar '
-            print(cover_latter)
-
-            # klik lamaran
-            link = driver.current_url.split('?')[0].rstrip('/') + '/apply'
-            driver.get(link)
-
-            # get info job
-            xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[1]/div/div/div/div[2]/h1'
-            company=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
-            xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[1]/div/div/div/div[2]/span[2]'
-            position=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
-            apply_desc=company+' - '+position+'\n\n'
-            print('apply_desc: '+apply_desc)
-            
-            # fill lamaran
-            xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[3]/fieldset/div/div/div/div[2]/div/div[2]/div[2]/div/div[2]/div/div/textarea'
-            click_selenium(driver,xfullpath,'xpath','clear')
-            click_selenium(driver,xfullpath,'xpath',cover_latter)
-
-            # klik lanjut 1
-            xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[4]/div/button'
-            click_selenium(driver,xfullpath,'xpath')
-
-            # time.sleep(10)
-            xfullpath='/html/body/div/div/div[1]/div[4]/div/div[3]'
-            html_content = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
-            getAutoComplete(driver,html_content)
-
+    last_index=0
+    for page in range(10):
+        main_url = driver.current_url
+        print("Recently URL:", main_url)
+        total_apply=''
+        for index in range(32):
+            print('page '+str(page+1)+' index '+str(last_index+index+1)+ ' last index '+str(last_index))
+            if index==31:
+                last_index+=32
+            if page<=1:
+                continue
             try:
-                # klik lanjut 2 //Jawab Pertanyaan
-                xfullpath=f"//*[@data-testid='continue-button']"
+                way=1
+                if(way==1):
+                    # click apply
+                    main_url='https://id.jobstreet.com/id/jobs-in-information-communication-technology'
+                    main_url+='?page='+str(page+1)
+                    driver.get(main_url)
+                    # driver.get('https://id.jobstreet.com/id/jobs-in-information-communication-technology?subclassification=6302%2C6290%2C6287')
+                    xfullpath=f"""//div[contains(@data-search-sol-meta, '"sectionRank":{last_index+index+1}')]"""
+                    click_selenium(driver,xfullpath,'xpath')
+                    # link full lamaran
+                    # xfullpath='/html/body/div[1]/div/div[6]/div/section/div[2]/div/div/div[1]/div/div/div/div/div[2]/div/div/div[3]/div/div/div[2]/div[2]'
+                    xfullpath='//*[@id="newTabButton"]/ancestor::*[11]'
+                elif(way==2):
+                    # theory
+                    # click apply
+                    driver.get(main_url)
+                    xfullpath='/html/body/div[1]/div/div[6]/div/div[2]/div[3]/section/div/div[3]/div[1]/div/div[2]/div[1]/div[2]/div/div/div[1]/div/a'
+                    click_selenium(driver,xfullpath,'xpath')
+                    # link full lamaran
+                    xfullpath='//*[@id="newTabButton"]/ancestor::*[11]'
+                time.sleep(5)
+                html_content=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+                link='https://id.jobstreet.com'+getHrefAttribute(html_content)
+                driver.get(link)
+
+                xfullpath='/html/body/div[1]/div/div[5]/div/div/div[2]/div[2]/div/div/div[1]'
+                position = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
+                print('Posisi:'+position)
+                
+                xfullpath='/html/body/div[1]/div/div[5]/div/div/div[2]/div[2]/div/div/div[2]/section[1]/div/div'
+                job_desc = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
+                print('Jobdesc:'+job_desc)
+
+                full_apply="Dengan keterangan posisi:"+position+'\n\nDengan Jobdesc:'+job_desc
+                cover_latter=getCoverLatter(full_apply)
+                # cover_latter='Izin Melamar '
+                print(cover_latter)
+
+                # klik lamaran
+                link = driver.current_url.split('?')[0].rstrip('/') + '/apply'
+                driver.get(link)
+
+                # get info job
+                xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[1]/div/div/div/div[2]/h1'
+                company=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+                xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[1]/div/div/div/div[2]/span[2]'
+                position=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+                apply_desc=company+' - '+position
+                print('apply_desc: '+apply_desc)
+                
+                # fill lamaran
+                xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[3]/fieldset/div/div/div/div[2]/div/div[2]/div[2]/div/div[2]/div/div/textarea'
+                click_selenium(driver,xfullpath,'xpath','clear')
+                click_selenium(driver,xfullpath,'xpath',cover_latter)
+
+                # klik lanjut 1
+                xfullpath='/html/body/div[1]/div/div[1]/div[4]/div/div[3]/div[2]/div[4]/div/button'
                 click_selenium(driver,xfullpath,'xpath')
+
+                time.sleep(5)
+                xfullpath='/html/body/div/div/div[1]/div[4]/div/div[3]'
+                html_content = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
+                getAutoComplete(driver,html_content)
+
+                for i in range(4):
+                    try:
+                        # klik lanjut 3 //Perbarui Profil Jobstreet [OPTIONAL]
+                        xfullpath=f"//*[@data-testid='continue-button']"
+                        click_selenium(driver,xfullpath,'xpath')
+                    except:
+                        print('skip button selanjutnya')
+                    
+                for i in range(3):
+                    try:
+                        # final klik
+                        xfullpath=f"//*[@data-testid='review-submit-application']"
+                        click_selenium(driver,xfullpath,'xpath')
+                    except:
+                        print('skip button kirim lamaran')
+                time.sleep(5)
+
+                total_apply+=str(index+1)+'.'+apply_desc+'\n'
             except:
-                print('skip button')
-
-
-            try:
-                # klik lanjut 3 //Perbarui Profil Jobstreet [OPTIONAL]
-                xfullpath=f"//*[@data-testid='continue-button']"
-                click_selenium(driver,xfullpath,'xpath')
-            except:
-                print('skip button')
-
-            # final klik
-            xfullpath=f"//*[@data-testid='review-submit-application']"
-            # click_selenium(driver,xfullpath,'xpath')
-            time.sleep(5)
-
-            total_apply+=str(index+1)+'.'+apply_desc+'\n'
-        except:
-            print('proses '+str(index+1)+' Gagal')
-
-    print(total_apply)
-    with open("output.txt", "w", encoding="utf-8") as file:
-        file.write(total_apply)
-    print("File berhasil dibuat: output.txt")
-
-        
-
-    # buka current link
-    # driver.get(current_url)
-        
-    time.sleep(20000)
-    
-
-    # Ambil HTML
-    html_content = driver.page_source
+                print('proses '+str(index+1)+' Gagal')
+        print(total_apply)
+        with open("output.txt", "w", encoding="utf-8") as file:
+            file.write(total_apply)
+        print("Page "+str(page+1)+" Selesai")
 
     # Tutup driver
     driver.quit()
@@ -456,24 +477,7 @@ def index():
         url = request.form.get('url')
         if url:
             try:
-
                 openJobstreet()
-
-                # Inisialisasi driver
-                driver = init_driver()
-                
-                # Buka URL
-                driver.get(url)
-                
-                # Tunggu sebentar agar halaman termuat
-                time.sleep(20000)
-                
-                # Ambil HTML
-                html_content = driver.page_source
-                
-                # Tutup driver
-                driver.quit()
-                
             except Exception as e:
                 html_content = f"Error: {str(e)}"
     
