@@ -269,6 +269,7 @@ def getAutoComplete(driver,html_content):
                 print('xpath:',xfullpath)
                 totalxpath = xfullpath.count('//*')
                 clickColoumn(driver,xfullpath,totalxpath)
+                time.sleep(1)
             except:
                 pass
     # time.sleep(10000)
@@ -366,10 +367,10 @@ def openJobstreet():
         print('sudah login')
     
     last_index=0
+    total_apply=''
     for page in range(10):
         main_url = driver.current_url
         print("Recently URL:", main_url)
-        total_apply=''
         for index in range(32):
             print('page '+str(page+1)+' index '+str(last_index+index+1)+ ' last index '+str(last_index))
             if index==31:
@@ -457,14 +458,14 @@ def openJobstreet():
                     except:
                         print('skip button kirim lamaran')
                 time.sleep(5)
-
-                total_apply+=str(index+1)+'.'+apply_desc+'\n'
+                total_apply+=str(last_index+index+1)+'.'+apply_desc+'\n'
             except:
                 print('proses '+str(index+1)+' Gagal')
-        print(total_apply)
-        with open("output.txt", "w", encoding="utf-8") as file:
-            file.write(total_apply)
         print("Page "+str(page+1)+" Selesai")
+    
+    print(total_apply)
+    with open("output.txt", "w", encoding="utf-8") as file:
+        file.write(total_apply)
 
     # Tutup driver
     driver.quit()
