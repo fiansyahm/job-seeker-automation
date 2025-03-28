@@ -4,6 +4,7 @@ import os
 import subprocess
 import time
 from datetime import datetime
+import pyperclip  # Library untuk mengakses clipboard
 
 # Fungsi untuk menginisialisasi Selenium WebDriver
 from selenium import webdriver
@@ -338,7 +339,8 @@ def openJobstreet():
     # Buka URL
     driver.get(url)
     try:
-        loginJobstreet(driver)
+        # loginJobstreet(driver)
+        pass
     except:
         # print('check')
         # time.sleep(100)
@@ -470,15 +472,51 @@ def openJobstreet():
     # Tutup driver
     driver.quit()
 
+
+def openIndeed():
+    # loginGmail(driver)
+    
+    # Inisialisasi driver
+    driver = init_driver()
+    url='https://id.indeed.com'
+    driver.get(url)
+    for index in range(10):
+        xfullpath=f"""/html/body/div[2]/div/div/span/div[4]/div[5]/div[2]/div/div/div/div/div/div[4]/div[1]/ul/li[{index+1}]"""
+        click_selenium(driver,xfullpath,'xpath')
+        xfullpath="//button[contains(@aria-label, 'Copy Link')]"
+        click_selenium(driver,xfullpath,'xpath')
+        url=pyperclip.paste()
+        driver.get(url)
+
+        # get info job
+        xfullpath='/html/body/div/div[2]/div[3]/div/div/div[1]/div[2]/div[1]/div[2]/div/div/div/div[1]/div/span/a/text()'
+        company=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+        xfullpath='/html/body/div/div[2]/div[3]/div/div/div[1]/div[2]/div[1]/div[1]/h1/span'
+        position=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
+        apply_desc=company+' - '+position
+        print('apply_desc: '+apply_desc)
+
+        url+='%2CiaBackPress'
+        driver.get(url)
+        time.sleep(1000)
+    time.sleep(1000)
+
+
 # Route utama
 @app.route('/', methods=['GET', 'POST'])
 def index():
     html_content = None
     if request.method == 'POST':
         url = request.form.get('url')
+        platform = request.form.get('platform')
+        print(url,platform)
+
         if url:
             try:
-                openJobstreet()
+                if platform == 0:
+                    openJobstreet()
+                elif platform == 1:
+                    openIndeed()
             except Exception as e:
                 html_content = f"Error: {str(e)}"
     
