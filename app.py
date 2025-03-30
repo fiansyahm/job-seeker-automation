@@ -5,6 +5,7 @@ import subprocess
 import time
 from datetime import datetime
 import pyperclip  # Library untuk mengakses clipboard
+import re
 
 # Fungsi untuk menginisialisasi Selenium WebDriver
 from selenium import webdriver
@@ -208,7 +209,13 @@ def call_gemini_api(prompt):
         print(f"Error saat memanggil API: {e}")
         return None
 def clickColoumnDetail(driver,xfullpath):
-    if 'option' not in xfullpath:
+    if '||' in xfullpath:
+        xfullpath = xfullpath.split('||')[0]
+        contain = xfullpath.split('||')[1]
+        print('xfullpath:',xfullpath)
+        print('\ncontain:',contain)
+        click_selenium(driver,xfullpath,'xpath',contain)
+    elif 'option' not in xfullpath:
         checkbox = driver.find_element(By.XPATH, xfullpath)
         if not checkbox.is_selected():
             checkbox.click()
@@ -256,6 +263,51 @@ def getAutoComplete(driver,html_content):
     # list_xpath_string=list_xpath_string.replace('//div[', '//*[')
     # list_xpath_string=list_xpath_string.replace('//span[', '//*[')
   
+
+    arr_xpath=list_xpath_string.split('```')[1].split('```')[0]
+    print('arr_xpath:',arr_xpath)
+    elements = arr_xpath.split('",')
+    print('-------GO TO XPATH---------')
+    for i in range(len(elements)):
+        if('"//*' in elements[i] and 'continue-button' not in elements[i]):
+            start = elements[i].find('"//*[')           +1
+            xfullpath=elements[i][start:len(elements[i])]
+            try:
+                xfullpath.strip()
+                print('xpath:',xfullpath)
+                totalxpath = xfullpath.count('//*')
+                clickColoumn(driver,xfullpath,totalxpath)
+                time.sleep(1)
+            except:
+                pass
+    # time.sleep(10000)
+
+def getAutoCompleteInput(driver,html_content):
+    print('Auto Complete Start')
+    prompt=''
+    prompt+='\n\nDengan informasi from pra lamaran seperti pada html ini:\n\n\''
+    prompt+=html_content
+    prompt+='\n\nBuatkan urutan xpath yang di klik berdasar profil lamaran disini\n\n'
+    prompt+= example_lamaran
+    prompt+='\n\nJika tidak ada pengalaman piih Less than 1 year\n\n\''
+    # Get JSON from URL
+    # url = 'https://ideea.site/personal-profile/30'
+    # response = requests.get(url)
+    # data = response.text  # Mengambil isi respons sebagai string
+    # prompt+= data
+
+    prompt+=f'''Keluarannya tolong seperti ini: ["//*[@data-testid='continue-button']", "//*[@data-testid='continue-button']", "//*[@data-testid='continue-button']","//*[contains(@data-testid, 'input-q_8e48fd774b5a6cc61e1027601d678e56')]/textarea||5 tahun" ]'''
+    prompt+=f'''\n\n//*[contains(@data-testid, 'input-q_8e48fd774b5a6cc61e1027601d678e56')]/textarea||5 tahun   jadi ada xpath yang dikasih || 5 tahun sebagai inputannya,jadi kalau ada inputan tempelkan dengan || (isi)'''
+
+    prompt+=f'''\n\nPilihannya dipilihkan Gemini saja'''
+    prompt+='formulir pra-lamaran ini xpathnya dipilih kira2 saja,misal pertanyaan tentang bahasa,dipilih bahasa inggris saja,dll'
+    list_xpath_string=call_gemini_api(prompt)
+    print('list_xpath_string:',list_xpath_string)
+
+    # change //select[  //input[
+    list_xpath_string=list_xpath_string.replace('//select[', '//*[')
+    list_xpath_string=list_xpath_string.replace('//input[', '//*[')
+    list_xpath_string=list_xpath_string.replace('//textarea[', '//*[')
 
     arr_xpath=list_xpath_string.split('```')[1].split('```')[0]
     print('arr_xpath:',arr_xpath)
@@ -377,8 +429,8 @@ def openJobstreet():
             print('page '+str(page+1)+' index '+str(last_index+index+1)+ ' last index '+str(last_index))
             if index==31:
                 last_index+=32
-            if page<=1:
-                continue
+            # if page<=1:
+            #     continue
             try:
                 way=1
                 if(way==1):
@@ -478,27 +530,105 @@ def openIndeed():
     
     # Inisialisasi driver
     driver = init_driver()
-    url='https://id.indeed.com'
-    driver.get(url)
-    for index in range(10):
-        xfullpath=f"""/html/body/div[2]/div/div/span/div[4]/div[5]/div[2]/div/div/div/div/div/div[4]/div[1]/ul/li[{index+1}]"""
-        click_selenium(driver,xfullpath,'xpath')
-        xfullpath="//button[contains(@aria-label, 'Copy Link')]"
-        click_selenium(driver,xfullpath,'xpath')
-        url=pyperclip.paste()
-        driver.get(url)
+    total_apply=''
+    for page in range(10):
+        if page==0:
+            continue
+        for index in range(10):
+            try:    
+                url='https://id.indeed.com/jobs?q=back+end+developer&start='+str(page*10)
+                driver.get(url)
+                xfullpath=f"""/html/body/main/div/div[2]/div/div[5]/div/div[1]/div[4]/div/ul/li[{index+2}]"""
+                click_selenium(driver,xfullpath,'xpath')
+                xfullpath="//button[contains(@aria-label, 'Copy Link')]"
+                click_selenium(driver,xfullpath,'xpath')
+                url=pyperclip.paste()
+                driver.get(url)
+                # get info job
+                company='Tidak Ada'
+                position='Tidak Ada'
+                time.sleep(10)
+                try:
+                    xfullpath='/html/body/div/div[2]/div[3]/div/div/div[1]/div[2]/div[1]/div[2]/div/div/div/div[1]/div/span/a'
+                    company=getAttributeDiv(driver,xfullpath,'xpath','innerHTML').split('<svg')[0]
+                except:
+                    pass
+                try:
+                    xfullpath='/html/body/div/div[2]/div[3]/div/div/div[1]/div[2]/div[1]/div[1]'
+                    position=getAttributeDiv(driver,xfullpath,'xpath','innerHTML').split('Header-title">')[1]
+                    position = re.sub(r'<.*?>', '', position)
+                except:
+                    pass
+                
+                apply_desc=company+' - '+position
+                print('apply_desc: '+apply_desc)
 
-        # get info job
-        xfullpath='/html/body/div/div[2]/div[3]/div/div/div[1]/div[2]/div[1]/div[2]/div/div/div/div[1]/div/span/a/text()'
-        company=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
-        xfullpath='/html/body/div/div[2]/div[3]/div/div/div[1]/div[2]/div[1]/div[1]/h1/span'
-        position=getAttributeDiv(driver,xfullpath,'xpath','innerHTML')
-        apply_desc=company+' - '+position
-        print('apply_desc: '+apply_desc)
+                time.sleep(5)
 
-        url+='%2CiaBackPress'
-        driver.get(url)
-        time.sleep(1000)
+                # continue
+                # url=url+'%2CiaBackPress'
+                # driver.get(url)
+                xfullpath="//button[contains(@aria-label, 'Apply now')]"
+                click_selenium(driver,xfullpath,'xpath')
+
+                time.sleep(5)
+
+                try:
+                    xfullpath='/html/body/div[2]/div/div[1]/div/div/div[2]/div[2]/div/div/main/div[2]/div/div/fieldset/label/input'
+                    clickColoumnDetail(driver,xfullpath)
+                    xfullpath='/html/body/div[2]/div/div[1]/div/div/div[2]/div[2]/div/div/main/div[3]/div/button'
+                    click_selenium(driver,xfullpath,'xpath')
+                except:
+                    print('tidak ada this session')
+                
+                try:
+                    # CV
+                    xfullpath='/html/body/div[2]/div/div[1]/div/div/div[2]/div[2]/div/div/main/div[3]/div'
+                    click_selenium(driver,xfullpath,'xpath')
+                except:
+                    print('tidak ada CV')
+
+                time.sleep(5)
+
+                try:
+                    # job experience
+                    xfullpath='/html/body/div[2]/div/div/div/div/div[2]/div[2]/div/div/main/div[1]/div/div/div/div/div/div/div[2]/button'
+                    click_selenium(driver,xfullpath,'xpath')
+                except:
+                    print('tidak ada job experience')
+
+                time.sleep(20)
+
+                try:
+                    # question
+                    xfullpath='/html/body/div[2]/div/div[1]/div/div/div[2]/div[2]/div/div/main'
+                    html_content = getAttributeDiv(driver, xfullpath, 'xpath', 'innerHTML')
+                    getAutoCompleteInput(driver,html_content)
+                except:
+                    print('tidak ada question')
+
+                try:
+                    time.sleep(5)
+                    # lanjut
+                    xfullpath='/html/body/div[2]/div/div[1]/div/div/div[2]/div[2]/div/div/main/div[3]/div/button'
+                    click_selenium(driver,xfullpath,'xpath')
+                except:
+                    print('tidak ada lanjut')
+
+                try:
+                    time.sleep(5)
+                    # final submit
+                    xfullpath='/html/body/div[2]/div/div/div/div/div[2]/div[2]/div/div/main/div[3]/div/button'
+                    click_selenium(driver,xfullpath,'xpath')
+                except:
+                    print('tidak ada final submit')
+                total_apply+=str(index+2)+'.'+apply_desc+'\n'
+            except:
+                print('proses '+str(index+1)+' Gagal')
+            
+    print(total_apply)
+    with open("output.txt", "w", encoding="utf-8") as file:
+        file.write(total_apply)
     time.sleep(1000)
 
 
@@ -508,7 +638,7 @@ def index():
     html_content = None
     if request.method == 'POST':
         url = request.form.get('url')
-        platform = request.form.get('platform')
+        platform = int(request.form.get('platform')) 
         print(url,platform)
 
         if url:
