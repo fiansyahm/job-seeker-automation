@@ -435,10 +435,10 @@ def openJobstreet():
                 way=1
                 if(way==1):
                     # click apply
-                    main_url='https://id.jobstreet.com/id/jobs-in-information-communication-technology'
+                    main_url='https://id.jobstreet.com/id/Fullstack-Developer-jobs-in-information-communication-technology'
                     main_url+='?page='+str(page+1)
                     driver.get(main_url)
-                    # driver.get('https://id.jobstreet.com/id/jobs-in-information-communication-technology?subclassification=6302%2C6290%2C6287')
+                    # driver.get('https://id.jobstreet.com/id/Fullstack-Developer-jobs-in-information-communication-technology?subclassification=6302%2C6290%2C6287')
                     xfullpath=f"""//div[contains(@data-search-sol-meta, '"sectionRank":{last_index+index+1}')]"""
                     click_selenium(driver,xfullpath,'xpath')
                     # link full lamaran
@@ -516,11 +516,14 @@ def openJobstreet():
             except:
                 print('proses '+str(index+1)+' Gagal')
         print("Page "+str(page+1)+" Selesai")
-    
-    print(total_apply)
-    with open("output.txt", "w", encoding="utf-8") as file:
-        file.write(total_apply)
-
+        print(total_apply)
+        crud_command=''
+        if page==0:
+            crud_command='w'
+        else:
+            crud_command='a'
+        with open("output.txt", crud_command, encoding="utf-8") as file:
+            file.write(total_apply)
     # Tutup driver
     driver.quit()
 
